@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/routes/app_routes.dart';
+import '../../services/api_service.dart';
+import '../../services/google_auth_service.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -215,8 +217,46 @@ class _LoginViewState extends State<LoginView> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () {
-                          Get.offNamed(AppRoutes.dashboard);
+                        onPressed: () async {
+                          if (emailController.text.isEmpty ||
+                              passwordController.text.isEmpty) {
+                            Get.snackbar(
+                              "Error",
+                              "Email dan password wajib diisi",
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+
+                            return;
+                          }
+
+                          try {
+                            final result = await ApiService.login(
+                              emailController.text.trim(),
+                              passwordController.text.trim(),
+                            );
+
+                            if (result["success"] == true) {
+                              Get.snackbar(
+                                "Berhasil",
+                                result["message"],
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
+
+                              Get.offNamed(AppRoutes.dashboard);
+                            } else {
+                              Get.snackbar(
+                                "Gagal",
+                                result["message"],
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
+                            }
+                          } catch (e) {
+                            Get.snackbar(
+                              "Error",
+                              "Tidak dapat terhubung ke server",
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+                          }
                         },
                         child: const Text(
                           'Login',
@@ -261,7 +301,36 @@ class _LoginViewState extends State<LoginView> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () async {
+                          try {
+                            final userCredential =
+                                await GoogleAuthService.signInWithGoogle();
+
+                            if (userCredential != null) {
+                              Get.snackbar(
+                                "Berhasil",
+                                "Login Google berhasil",
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
+
+                              Get.offNamed(AppRoutes.dashboard);
+                            } else {
+                              Get.snackbar(
+                                "Gagal",
+                                "Login Google dibatalkan",
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
+                            }
+                          } catch (e) {
+                            print(e);
+
+                            Get.snackbar(
+                              "Error",
+                              e.toString(),
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+                          }
+                        },
                         icon: const Icon(Icons.login, color: Colors.black87),
                         label: const Text(
                           'Login dengan Google',
