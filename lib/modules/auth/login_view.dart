@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../core/routes/app_routes.dart';
 import '../../services/api_service.dart';
 import '../../services/google_auth_service.dart';
+import '../../services/storage_service.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -15,6 +16,7 @@ class _LoginViewState extends State<LoginView> {
   late TextEditingController emailController;
   late TextEditingController passwordController;
   bool _passwordVisible = false;
+  bool _isLoading       = false;
 
   @override
   void initState() {
@@ -217,17 +219,18 @@ class _LoginViewState extends State<LoginView> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () async {
+                        onPressed: _isLoading ? null : () async {
                           if (emailController.text.isEmpty ||
                               passwordController.text.isEmpty) {
                             Get.snackbar(
-                              "Error",
-                              "Email dan password wajib diisi",
+                              'Error',
+                              'Email dan password wajib diisi',
                               snackPosition: SnackPosition.BOTTOM,
                             );
-
                             return;
                           }
+
+                          setState(() => _isLoading = true);
 
                           try {
                             final result = await ApiService.login(
@@ -235,27 +238,33 @@ class _LoginViewState extends State<LoginView> {
                               passwordController.text.trim(),
                             );
 
-                            if (result["success"] == true) {
-                              Get.snackbar(
-                                "Berhasil",
-                                result["message"],
-                                snackPosition: SnackPosition.BOTTOM,
+                            if (result['success'] == true) {
+                              // ✅ Simpan token & data user ke storage
+                              final user = result['user'];
+                              await StorageService.saveSession(
+                                token:  result['token'],
+                                userId: user['id'],
+                                nama:   user['nama'],
+                                email:  user['email'],
                               );
-
                               Get.offNamed(AppRoutes.dashboard);
                             } else {
                               Get.snackbar(
-                                "Gagal",
-                                result["message"],
+                                'Gagal',
+                                result['message'] ?? 'Login gagal',
                                 snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: const Color(0xFFFFEBEE),
                               );
                             }
                           } catch (e) {
                             Get.snackbar(
-                              "Error",
-                              "Tidak dapat terhubung ke server",
+                              'Error',
+                              'Tidak dapat terhubung ke server. Pastikan backend berjalan.',
                               snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: const Color(0xFFFFEBEE),
                             );
+                          } finally {
+                            setState(() => _isLoading = false);
                           }
                         },
                         child: const Text(
@@ -301,34 +310,65 @@ class _LoginViewState extends State<LoginView> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () async {
+                        onPressed: _isLoading ? null : () async {
+                          setState(() => _isLoading = true);
                           try {
                             final userCredential =
                                 await GoogleAuthService.signInWithGoogle();
 
-                            if (userCredential != null) {
-                              Get.snackbar(
-                                "Berhasil",
-                                "Login Google berhasil",
-                                snackPosition: SnackPosition.BOTTOM,
+                            if (userCredential != null && userCredential.user != null) {
+                              final gUser = userCredential.user!;
+                              
+                              // Sinkronisasi ke backend Flask & dapatkan JWT
+                              final result = await ApiService.loginWithGoogle(
+                                nama: gUser.displayName ?? 'Google User',
+                                email: gUser.email ?? '',
+                                fotoUrl: gUser.photoURL ?? '',
                               );
 
-                              Get.offNamed(AppRoutes.dashboard);
+                              if (result['success'] == true) {
+                                final dbUser = result['user'];
+                                await StorageService.saveSession(
+                                  token:  result['token'],
+                                  userId: dbUser['id'],
+                                  nama:   dbUser['nama'],
+                                  email:  dbUser['email'],
+                                );
+
+                                Get.snackbar(
+                                  "Berhasil",
+                                  "Login Google berhasil",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  backgroundColor: const Color(0xFFE8F5E9),
+                                );
+
+                                Get.offNamed(AppRoutes.dashboard);
+                              } else {
+                                Get.snackbar(
+                                  "Gagal",
+                                  result['message'] ?? "Gagal sinkronisasi data ke backend",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  backgroundColor: const Color(0xFFFFEBEE),
+                                );
+                              }
                             } else {
                               Get.snackbar(
                                 "Gagal",
                                 "Login Google dibatalkan",
                                 snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: const Color(0xFFFFEBEE),
                               );
                             }
                           } catch (e) {
                             print(e);
-
                             Get.snackbar(
                               "Error",
-                              e.toString(),
+                              "Gagal terhubung ke server backend atau Firebase.",
                               snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: const Color(0xFFFFEBEE),
                             );
+                          } finally {
+                            setState(() => _isLoading = false);
                           }
                         },
                         icon: const Icon(Icons.login, color: Colors.black87),

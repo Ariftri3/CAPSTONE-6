@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/routes/app_routes.dart';
+import '../../services/api_service.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -34,6 +35,8 @@ class _RegisterViewState extends State<RegisterView> {
     confirmPasswordController.dispose();
     super.dispose();
   }
+
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -297,16 +300,78 @@ class _RegisterViewState extends State<RegisterView> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () {
-                          Get.offNamed(AppRoutes.dashboard);
+                        onPressed: _isLoading ? null : () async {
+                          final nama = nameController.text.trim();
+                          final email = emailController.text.trim();
+                          final password = passwordController.text.trim();
+                          final confirmPassword = confirmPasswordController.text.trim();
+
+                          if (nama.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+                            Get.snackbar(
+                              'Error',
+                              'Semua kolom wajib diisi',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: const Color(0xFFFFEBEE),
+                            );
+                            return;
+                          }
+
+                          if (password != confirmPassword) {
+                            Get.snackbar(
+                              'Error',
+                              'Konfirmasi password tidak cocok',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: const Color(0xFFFFEBEE),
+                            );
+                            return;
+                          }
+
+                          setState(() => _isLoading = true);
+
+                          try {
+                            final result = await ApiService.register(nama, email, password);
+
+                            if (result['success'] == true) {
+                              Get.snackbar(
+                                'Berhasil',
+                                'Registrasi berhasil! Silakan login.',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: const Color(0xFFE8F5E9),
+                              );
+                              // Kembali ke halaman Login
+                              Get.offNamed(AppRoutes.login);
+                            } else {
+                              Get.snackbar(
+                                'Gagal',
+                                result['message'] ?? 'Registrasi gagal',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: const Color(0xFFFFEBEE),
+                              );
+                            }
+                          } catch (e) {
+                            Get.snackbar(
+                              'Error',
+                              'Tidak dapat terhubung ke server backend.',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: const Color(0xFFFFEBEE),
+                            );
+                          } finally {
+                            setState(() => _isLoading = false);
+                          }
                         },
-                        child: const Text(
-                          'Daftar',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        child: _isLoading 
+                          ? const SizedBox(
+                              height: 20, 
+                              width: 20, 
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                            )
+                          : const Text(
+                              'Daftar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                       ),
                     ),
                     const SizedBox(height: 20),

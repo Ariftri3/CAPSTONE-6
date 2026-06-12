@@ -81,75 +81,92 @@ class StatisticsView extends GetView<StatisticsController> {
                   const SizedBox(height: 18),
                   SizedBox(
                     height: 220,
-                    child: LineChart(
-                      LineChartData(
-                        borderData: FlBorderData(show: false),
-                        gridData: FlGridData(show: false),
-                        titlesData: FlTitlesData(
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 28,
-                              getTitlesWidget: (value, meta) {
-                                const labels = [
-                                  'Sen',
-                                  'Sel',
-                                  'Rab',
-                                  'Kam',
-                                  'Jum',
-                                  'Sab',
-                                  'Min',
-                                ];
-                                return Text(
-                                  labels[value.toInt().clamp(
-                                    0,
-                                    labels.length - 1,
-                                  )],
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppTheme.textDark,
-                                  ),
-                                );
-                              },
-                            ),
+                    child: Obx(() {
+                      if (controller.isLoading.value) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.primaryBlue,
                           ),
-                          leftTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
+                        );
+                      }
+                      if (controller.weeklyMoodData.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'Tidak ada data grafik',
+                            style: TextStyle(color: Colors.grey),
                           ),
-                          topTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          rightTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                        ),
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: controller.weeklyMoodData,
-                            isCurved: true,
-                            gradient: const LinearGradient(
-                              colors: [
-                                AppTheme.primaryBlue,
-                                AppTheme.accentBlue,
-                              ],
-                            ),
-                            barWidth: 4,
-                            dotData: FlDotData(show: false),
-                            belowBarData: BarAreaData(
-                              show: true,
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppTheme.primaryBlue.withOpacity(0.24),
-                                  AppTheme.primaryLight.withOpacity(0.05),
-                                ],
+                        );
+                      }
+                      return LineChart(
+                        LineChartData(
+                          borderData: FlBorderData(show: false),
+                          gridData: FlGridData(show: false),
+                          titlesData: FlTitlesData(
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 28,
+                                getTitlesWidget: (value, meta) {
+                                  const labels = [
+                                    'Sen',
+                                    'Sel',
+                                    'Rab',
+                                    'Kam',
+                                    'Jum',
+                                    'Sab',
+                                    'Min',
+                                  ];
+                                  return Text(
+                                    labels[value.toInt().clamp(
+                                      0,
+                                      labels.length - 1,
+                                    )],
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.textDark,
+                                    ),
+                                  );
+                                },
                               ),
                             ),
+                            leftTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            topTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            rightTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                           ),
-                        ],
-                        minY: 3.0,
-                        maxY: 5.0,
-                      ),
-                    ),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: controller.weeklyMoodData,
+                              isCurved: true,
+                              gradient: const LinearGradient(
+                                colors: [
+                                  AppTheme.primaryBlue,
+                                  AppTheme.accentBlue,
+                                ],
+                              ),
+                              barWidth: 4,
+                              dotData: FlDotData(show: false),
+                              belowBarData: BarAreaData(
+                                show: true,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppTheme.primaryBlue.withOpacity(0.24),
+                                    AppTheme.primaryLight.withOpacity(0.05),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                          minY: 3.0,
+                          maxY: 5.0,
+                        ),
+                      );
+                    }),
                   ),
                 ],
               ),
