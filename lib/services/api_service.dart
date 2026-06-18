@@ -11,7 +11,7 @@ class ApiService {
   static Future<Map<String, String>> _authHeaders() async {
     final token = await StorageService.getToken();
     return {
-      'Content-Type':  'application/json',
+      'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
     };
   }
@@ -44,11 +44,7 @@ class ApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/login/google'),
       headers: _headers,
-      body: jsonEncode({
-        'nama': nama,
-        'email': email,
-        'foto_url': fotoUrl,
-      }),
+      body: jsonEncode({'nama': nama, 'email': email, 'foto_url': fotoUrl}),
     );
     return jsonDecode(response.body);
   }
@@ -89,6 +85,29 @@ class ApiService {
       Uri.parse('$baseUrl/mood'),
       headers: await _authHeaders(),
       body: jsonEncode({'mood_value': moodValue, 'catatan': catatan}),
+    );
+    return jsonDecode(response.body);
+  }
+
+  /// PUT /mood/<id> — update catatan mood
+  static Future<Map<String, dynamic>> updateMood(
+    int moodId, {
+    required int moodValue,
+    String catatan = '',
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/mood/$moodId'),
+      headers: await _authHeaders(),
+      body: jsonEncode({'mood_value': moodValue, 'catatan': catatan}),
+    );
+    return jsonDecode(response.body);
+  }
+
+  /// DELETE /mood/<id> — hapus entry mood
+  static Future<Map<String, dynamic>> deleteMood(int moodId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/mood/$moodId'),
+      headers: await _authHeaders(),
     );
     return jsonDecode(response.body);
   }
@@ -185,6 +204,50 @@ class ApiService {
   static Future<Map<String, dynamic>> getChatHistory() async {
     final response = await http.get(
       Uri.parse('$baseUrl/chatbot/history'),
+      headers: await _authHeaders(),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // ════════════════════════════════════════════════
+  // PROFILE
+  // ════════════════════════════════════════════════
+
+  /// GET /profile — ambil data profile user
+  static Future<Map<String, dynamic>> getProfile() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/profile'),
+      headers: await _authHeaders(),
+    );
+    return jsonDecode(response.body);
+  }
+
+  /// PUT /profile — update profile user
+  static Future<Map<String, dynamic>> updateProfile({
+    required String nama,
+    String fotoUrl = '',
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/profile'),
+      headers: await _authHeaders(),
+      body: jsonEncode({'nama': nama, 'foto_url': fotoUrl}),
+    );
+    return jsonDecode(response.body);
+  }
+
+  /// GET /profile/stats — ambil statistik user
+  static Future<Map<String, dynamic>> getProfileStats() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/profile/stats'),
+      headers: await _authHeaders(),
+    );
+    return jsonDecode(response.body);
+  }
+
+  /// DELETE /profile — hapus akun user
+  static Future<Map<String, dynamic>> deleteAccount() async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/profile'),
       headers: await _authHeaders(),
     );
     return jsonDecode(response.body);
