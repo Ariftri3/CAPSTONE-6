@@ -3,10 +3,11 @@ import '../../modules/assessment/assessment_binding.dart';
 import '../../modules/assessment/assessment_result_view.dart';
 import '../../modules/assessment/assessment_view.dart';
 import '../../modules/auth/login_view.dart';
+import '../../modules/auth/register_view.dart';
+import '../../modules/auth/otp_view.dart';          // ← BARU
 import '../../modules/journal/journal_view.dart';
 import '../../modules/help/help_view.dart';
 import '../../modules/profile/profile_view.dart';
-import '../../modules/auth/register_view.dart';
 import '../../modules/chatbot/chatbot_binding.dart';
 import '../../modules/chatbot/chatbot_view.dart';
 import '../../modules/dashboard/dashboard_binding.dart';
@@ -30,6 +31,7 @@ abstract class AppPages {
     ),
     GetPage(name: AppRoutes.login, page: () => const LoginView()),
     GetPage(name: AppRoutes.register, page: () => const RegisterView()),
+    GetPage(name: AppRoutes.otp, page: () => const OtpView()),   // ← BARU
     GetPage(
       name: AppRoutes.dashboard,
       page: () => MainShellView(),

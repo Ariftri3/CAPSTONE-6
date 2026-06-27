@@ -32,6 +32,10 @@ class AssessmentResultView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Get.back(),
+        ),
         title: const Text('Hasil Tes'),
         backgroundColor: Colors.white,
         foregroundColor: AppTheme.primaryBlue,

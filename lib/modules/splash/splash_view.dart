@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/routes/app_routes.dart';
 
@@ -22,7 +23,6 @@ class SplashView extends GetView {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Mental Health Logo
                     Container(
                       width: 140,
                       height: 140,
@@ -40,7 +40,6 @@ class SplashView extends GetView {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Left head
                           Positioned(
                             left: 15,
                             child: Container(
@@ -49,12 +48,10 @@ class SplashView extends GetView {
                               decoration: BoxDecoration(
                                 color: const Color(0xFF0052CC),
                                 borderRadius: BorderRadius.circular(20),
-                                shape: BoxShape.rectangle,
                               ),
                               child: CustomPaint(painter: HeadPainter()),
                             ),
                           ),
-                          // Right head
                           Positioned(
                             right: 15,
                             child: Container(
@@ -63,67 +60,30 @@ class SplashView extends GetView {
                               decoration: BoxDecoration(
                                 color: const Color(0xFF0052CC),
                                 borderRadius: BorderRadius.circular(20),
-                                shape: BoxShape.rectangle,
                               ),
                               child: CustomPaint(painter: HeadPainter()),
                             ),
                           ),
-                          // Center brain/dots
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
+                                  _dot(8),
                                   const SizedBox(width: 6),
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
+                                  _dot(8),
                                 ],
                               ),
                               const SizedBox(height: 4),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
+                                  _dot(6),
                                   const SizedBox(width: 4),
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
+                                  _dot(6),
                                   const SizedBox(width: 4),
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
+                                  _dot(6),
                                 ],
                               ),
                             ],
@@ -134,11 +94,12 @@ class SplashView extends GetView {
                     const SizedBox(height: 32),
                     Text(
                       'MindCare',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.displayLarge?.copyWith(
+                                color: Colors.white,
+                                fontSize: 36,
+                                fontWeight: FontWeight.bold,
+                              ),
                     ),
                     const SizedBox(height: 16),
                     const Padding(
@@ -147,10 +108,9 @@ class SplashView extends GetView {
                         'jaga kesehatan mental Anda dengan mudah',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
-                          height: 1.5,
-                        ),
+                            color: Colors.white70,
+                            fontSize: 16,
+                            height: 1.5),
                       ),
                     ),
                   ],
@@ -168,30 +128,37 @@ class SplashView extends GetView {
                           backgroundColor: AppTheme.primaryBlue,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                         onPressed: () {
-                          Get.toNamed(AppRoutes.login);
+                          // Cek sesi Supabase — kalau masih login, langsung ke dashboard
+                          final session =
+                              Supabase.instance.client.auth.currentSession;
+                          if (session != null) {
+                            Get.offNamed(AppRoutes.dashboard);
+                          } else {
+                            Get.toNamed(AppRoutes.login);
+                          }
                         },
-                        child: const Text(
-                          'Mulai',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        child: const Text('Mulai',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600)),
                       ),
                     ),
                     const SizedBox(height: 16),
                     GestureDetector(
                       onTap: () {
-                        Get.toNamed(AppRoutes.login);
+                        final session =
+                            Supabase.instance.client.auth.currentSession;
+                        if (session != null) {
+                          Get.offNamed(AppRoutes.dashboard);
+                        } else {
+                          Get.toNamed(AppRoutes.login);
+                        }
                       },
-                      child: const Text(
-                        'Sudah punya akun? Login',
-                        style: TextStyle(color: Colors.white70, fontSize: 14),
-                      ),
+                      child: const Text('Sudah punya akun? Login',
+                          style: TextStyle(
+                              color: Colors.white70, fontSize: 14)),
                     ),
                   ],
                 ),
@@ -202,17 +169,21 @@ class SplashView extends GetView {
       ),
     );
   }
+
+  Widget _dot(double size) => Container(
+        width: size,
+        height: size,
+        decoration:
+            const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+      );
 }
 
 class HeadPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    // Paint head profile
     final paint = Paint()
       ..color = const Color(0xFF0052CC)
       ..style = PaintingStyle.fill;
-
-    // Draw simple head shape
     canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.3), 12, paint);
   }
 

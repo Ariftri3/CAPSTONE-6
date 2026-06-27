@@ -12,6 +12,10 @@ class StatisticsView extends GetView<StatisticsController> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Get.back(),
+        ),
         title: const Text('Statistik'),
         backgroundColor: Colors.white,
         foregroundColor: AppTheme.primaryBlue,

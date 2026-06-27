@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/bindings/app_binding.dart';
 import 'core/routes/app_pages.dart';
 import 'core/theme/app_theme.dart';
-import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+  // ── Init Supabase (menggantikan Firebase.initializeApp) ──────
+  // Ganti nilai ini dengan Project URL dan Anon Key dari Supabase Dashboard
+  await Supabase.initialize(
+    url: 'https://eqhlekptvbcvznsmnorv.supabase.co',
+    anonKey: 'sb_publishable_AGZyN7KYNWJxL_oCvhuhuA_KVtGJTj0', // ← ganti dengan anon key asli dari Supabase Dashboard
   );
 
-  runApp(
-    const MindCareApp(),
-  );
+  runApp(const MindCareApp());
 }
 
 class MindCareApp extends StatelessWidget {
@@ -30,6 +30,12 @@ class MindCareApp extends StatelessWidget {
       initialBinding: AppBinding(),
       initialRoute: AppPages.initial,
       getPages: AppPages.routes,
+      unknownRoute: GetPage(
+        name: '/notfound',
+        page: () => const Scaffold(
+          body: Center(child: Text('Terjadi kesalahan URL. Silakan kembali.')),
+        ),
+      ),
       theme: AppTheme.lightTheme,
       themeMode: ThemeMode.light,
     );

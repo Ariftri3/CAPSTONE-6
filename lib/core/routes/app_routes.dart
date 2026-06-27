@@ -2,6 +2,7 @@ abstract class AppRoutes {
   static const splash = '/splash';
   static const login = '/login';
   static const register = '/register';
+  static const otp = '/otp';           // ← BARU: layar OTP
   static const dashboard = '/dashboard';
   static const statistics = '/statistics';
   static const detection = '/detection';

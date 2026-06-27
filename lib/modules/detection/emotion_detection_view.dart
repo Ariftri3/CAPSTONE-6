@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_theme.dart';
@@ -5,6 +6,31 @@ import 'emotion_detection_controller.dart';
 
 class EmotionDetectionView extends GetView<EmotionDetectionController> {
   const EmotionDetectionView({super.key});
+
+  // Mapping label emosi ke emoji
+  String _emoji(String label) {
+    switch (label) {
+      case 'Bahagia':  return '😊';
+      case 'Tenang':   return '😌';
+      case 'Sedih':    return '😢';
+      case 'Lelah':    return '😴';
+      case 'Cemas':    return '😰';
+      case 'Netral':   return '😐';
+      default:         return '🔍';
+    }
+  }
+
+  Color _emotionColor(String label) {
+    switch (label) {
+      case 'Bahagia':  return const Color(0xFF4CAF50);
+      case 'Tenang':   return const Color(0xFF2196F3);
+      case 'Sedih':    return const Color(0xFF9C27B0);
+      case 'Lelah':    return const Color(0xFF607D8B);
+      case 'Cemas':    return const Color(0xFFFF9800);
+      case 'Netral':   return const Color(0xFF795548);
+      default:         return AppTheme.primaryBlue;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,89 +46,47 @@ class EmotionDetectionView extends GetView<EmotionDetectionController> {
         foregroundColor: AppTheme.primaryBlue,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
         ],
       ),
       backgroundColor: AppTheme.primaryLight,
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              height: 320,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: AppTheme.primaryBlue.withOpacity(0.18),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.camera_alt,
-                        size: 68,
-                        color: AppTheme.primaryBlue,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Ketuk untuk Ambil Gambar',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: AppTheme.textDark,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    left: 24,
-                    right: 24,
-                    top: 28,
-                    bottom: 28,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: AppTheme.primaryBlue.withOpacity(0.42),
-                          width: 1.8,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 22),
-            ElevatedButton(
-              onPressed: controller.detectEmotion,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryBlue,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-              ),
-              child: const Text('Mendeteksi...'),
-            ),
-            const SizedBox(height: 26),
+            // ── Preview kamera live ──────────────────────────────
             Obx(() {
+              if (controller.errorMessage.value.isNotEmpty) {
+                return _cameraPlaceholder(
+                  icon: Icons.error_outline,
+                  text: controller.errorMessage.value,
+                  color: Colors.red,
+                );
+              }
+              if (!controller.cameraReady.value) {
+                return _cameraPlaceholder(
+                  icon: Icons.camera_alt,
+                  text: 'Membuka kamera...',
+                );
+              }
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: AspectRatio(
+                  aspectRatio: 3 / 4,
+                  child: CameraPreview(controller.cameraController!),
+                ),
+              );
+            }),
+
+            const SizedBox(height: 20),
+
+            // ── Hasil deteksi emosi ──────────────────────────────
+            Obx(() {
+              final emotion = controller.detectedEmotion.value;
+              final conf = controller.confidence.value;
+              final color = _emotionColor(emotion);
+
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -116,86 +100,112 @@ class EmotionDetectionView extends GetView<EmotionDetectionController> {
                   ],
                 ),
                 padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryBlue.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(14),
+                    // Ikon emosi + warna dinamis
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Center(
+                        child: Text(_emoji(emotion),
+                            style: const TextStyle(fontSize: 28)),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(emotion,
+                              style: const TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                          Text(
+                            conf > 0
+                                ? '${conf.toStringAsFixed(1)}% akurasi'
+                                : 'Menunggu wajah...',
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.grey[600]),
                           ),
-                          child: const Icon(
-                            Icons.mood,
-                            color: AppTheme.primaryBlue,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Mood Terdeteksi',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '92% Akurat',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: Colors.grey[600]),
+                          if (conf > 0) ...[
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: conf / 100,
+                                backgroundColor: Colors.grey[200],
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(color),
+                                minHeight: 6,
+                              ),
                             ),
                           ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 18,
-                              horizontal: 16,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryLight,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  controller.detectedEmotion.value,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium
-                                      ?.copyWith(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '${controller.confidence.value}% Akurat',
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(color: Colors.grey[600]),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
               );
             }),
+
+            const SizedBox(height: 16),
+
+            // ── Tombol Simpan ─────────────────────────────────────
+            Obx(() => ElevatedButton.icon(
+                  onPressed: controller.isSaving.value
+                      ? null
+                      : controller.saveDetection,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryBlue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  icon: controller.isSaving.value
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Icon(Icons.save_alt, color: Colors.white),
+                  label: Text(
+                    controller.isSaving.value ? 'Menyimpan...' : 'Simpan Hasil',
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white),
+                  ),
+                )),
           ],
         ),
       ),
     );
   }
+
+  Widget _cameraPlaceholder({
+    required IconData icon,
+    required String text,
+    Color color = AppTheme.primaryBlue,
+  }) =>
+      Container(
+        height: 280,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: color.withOpacity(0.2), width: 2),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 64, color: color),
+            const SizedBox(height: 12),
+            Text(text,
+                style: TextStyle(color: color, fontWeight: FontWeight.w500)),
+          ],
+        ),
+      );
 }
