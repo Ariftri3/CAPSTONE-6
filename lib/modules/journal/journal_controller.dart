@@ -9,7 +9,12 @@ class JournalController extends GetxController {
   final isLoading = false.obs;
   final entries = [].obs;
 
-  final editingId = RxnInt(); // ID jurnal yang sedang diedit (null jika mode tambah)
+  // Rekomendasi kegiatan anti-stres dari backend, muncul setelah simpan jurnal.
+  // Format: [{"kategori": "Cemas", "kegiatan": ["...", "..."]}, ...]
+  final recommendations = <Map<String, dynamic>>[].obs;
+
+  final editingId =
+      RxnInt(); // ID jurnal yang sedang diedit (null jika mode tambah)
 
   @override
   void onInit() {
@@ -43,6 +48,38 @@ class JournalController extends GetxController {
     titleController.clear();
     noteController.clear();
     charCount.value = 0;
+  }
+
+  void clearRecommendations() {
+    recommendations.value = [];
+  }
+
+  /// Tampilkan dialog konfirmasi sebelum benar-benar menghapus jurnal.
+  /// Dipanggil dari tombol hapus di journal_view.dart.
+  void confirmAndDelete(int id, {String? title}) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Hapus jurnal?'),
+        content: Text(
+          title != null && title.isNotEmpty
+              ? 'Jurnal "$title" akan dihapus permanen dan tidak bisa dikembalikan.'
+              : 'Jurnal ini akan dihapus permanen dan tidak bisa dikembalikan.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
+          TextButton(
+            onPressed: () {
+              Get.back(); // tutup dialog dulu
+              deleteJournal(id);
+            },
+            child: const Text(
+              'Hapus',
+              style: TextStyle(color: Colors.redAccent),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> deleteJournal(int id) async {
@@ -83,13 +120,13 @@ class JournalController extends GetxController {
 
   Future<void> saveJournal() async {
     final content = noteController.text.trim();
-    final title = titleController.text.trim().isEmpty 
-        ? 'Jurnal Harian' 
+    final title = titleController.text.trim().isEmpty
+        ? 'Jurnal Harian'
         : titleController.text.trim();
 
     if (content.isEmpty) {
       Get.snackbar(
-        'Peringatan', 
+        'Peringatan',
         'Isi jurnal tidak boleh kosong',
         snackPosition: SnackPosition.BOTTOM,
       );
@@ -97,6 +134,8 @@ class JournalController extends GetxController {
     }
 
     isLoading.value = true;
+    recommendations.value =
+        []; // bersihkan rekomendasi lama selama proses simpan
     try {
       final isEdit = editingId.value != null;
       final result = isEdit
@@ -115,15 +154,24 @@ class JournalController extends GetxController {
       if (result['success'] == true) {
         cancelEdit();
         Get.snackbar(
-          'Berhasil', 
-          isEdit ? 'Jurnal berhasil diupdate 📝' : 'Jurnal berhasil disimpan 📝',
+          'Berhasil',
+          isEdit
+              ? 'Jurnal berhasil diupdate 📝'
+              : 'Jurnal berhasil disimpan 📝',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: const Color(0xFFE8F5E9),
         );
+        // Tampilkan rekomendasi kegiatan anti-stres dari backend (jika ada)
+        final recs = result['recommendations'];
+        if (recs is List) {
+          recommendations.value = recs
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
+        }
         loadJournals(); // Refresh list jurnal
       } else {
         Get.snackbar(
-          'Gagal', 
+          'Gagal',
           result['message'] ?? 'Gagal menyimpan jurnal',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: const Color(0xFFFFEBEE),
@@ -131,7 +179,7 @@ class JournalController extends GetxController {
       }
     } catch (e) {
       Get.snackbar(
-        'Error', 
+        'Error',
         'Tidak dapat terhubung ke server',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: const Color(0xFFFFEBEE),

@@ -8,6 +8,7 @@ import '../../modules/auth/otp_view.dart';          // ← BARU
 import '../../modules/journal/journal_view.dart';
 import '../../modules/help/help_view.dart';
 import '../../modules/profile/profile_view.dart';
+import '../../modules/profile/profile_binding.dart';
 import '../../modules/chatbot/chatbot_binding.dart';
 import '../../modules/chatbot/chatbot_view.dart';
 import '../../modules/dashboard/dashboard_binding.dart';
@@ -69,6 +70,10 @@ abstract class AppPages {
     ),
     GetPage(name: AppRoutes.journal, page: () => const JournalView()),
     GetPage(name: AppRoutes.help, page: () => const HelpView()),
-    GetPage(name: AppRoutes.profile, page: () => const ProfileView()),
+    GetPage(
+      name: AppRoutes.profile,
+      page: () => const ProfileView(),
+      binding: ProfileBinding(),
+    ),
   ];
 }

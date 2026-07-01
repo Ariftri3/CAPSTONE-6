@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_theme.dart';
+import '../../services/supabase_service.dart';
 import 'dashboard_controller.dart';
 
 class DashboardView extends GetView<DashboardController> {
@@ -20,11 +21,20 @@ class DashboardView extends GetView<DashboardController> {
         foregroundColor: AppTheme.primaryBlue,
         actions: [
           Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: IconButton(
+              icon: const Icon(Icons.person_outline),
+              onPressed: () => Get.toNamed(AppRoutes.profile),
+              tooltip: 'Profil',
+            ),
+          ),
+          Padding(
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
               icon: const Icon(Icons.logout),
-              onPressed: () {
-                Get.offNamed(AppRoutes.login);
+              onPressed: () async {
+                await SupabaseService.logout();
+                Get.offAllNamed(AppRoutes.login);
               },
               tooltip: 'Logout',
             ),

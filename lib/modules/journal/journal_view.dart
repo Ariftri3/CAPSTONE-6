@@ -61,13 +61,15 @@ class JournalView extends StatelessWidget {
                           fontSize: 14,
                         ),
                       ),
-                      Obx(() => Text(
-                        '${controller.charCount.value}/1000',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
+                      Obx(
+                        () => Text(
+                          '${controller.charCount.value}/1000',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         ),
-                      )),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -160,8 +162,8 @@ class JournalView extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         ElevatedButton(
-                          onPressed: controller.isLoading.value 
-                              ? null 
+                          onPressed: controller.isLoading.value
+                              ? null
                               : controller.saveJournal,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primaryBlue,
@@ -174,7 +176,9 @@ class JournalView extends StatelessWidget {
                               ? const SizedBox(
                                   height: 20,
                                   width: 20,
-                                  child: CircularProgressIndicator(color: Colors.white),
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
                                 )
                               : Text(isEdit ? 'Update Jurnal' : 'Simpan'),
                         ),
@@ -182,9 +186,12 @@ class JournalView extends StatelessWidget {
                           const SizedBox(height: 8),
                           TextButton(
                             onPressed: controller.cancelEdit,
-                            child: const Text('Batal Edit', style: TextStyle(color: Colors.redAccent)),
+                            child: const Text(
+                              'Batal Edit',
+                              style: TextStyle(color: Colors.redAccent),
+                            ),
                           ),
-                        ]
+                        ],
                       ],
                     );
                   }),
@@ -192,15 +199,118 @@ class JournalView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // Card rekomendasi kegiatan anti-stres, muncul setelah jurnal disimpan
+            Obx(() {
+              if (controller.recommendations.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryBlue.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: AppTheme.primaryBlue.withOpacity(0.2),
+                  ),
+                ),
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(
+                              Icons.spa_outlined,
+                              color: AppTheme.primaryBlue,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Rekomendasi untukmu',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                color: AppTheme.primaryBlue,
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 18),
+                          onPressed: controller.clearRecommendations,
+                          constraints: const BoxConstraints(),
+                          padding: EdgeInsets.zero,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ...controller.recommendations.map((block) {
+                      final kategori = block['kategori'] ?? '';
+                      final List kegiatan = block['kegiatan'] ?? [];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (kategori.toString().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Text(
+                                  kategori.toString(),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ...kegiatan.map(
+                              (k) => Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: 4,
+                                  left: 4,
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      '•  ',
+                                      style: TextStyle(fontSize: 13),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        k.toString(),
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              );
+            }),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Riwayat Jurnal',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 18),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineSmall?.copyWith(fontSize: 18),
                 ),
                 TextButton(
-                  onPressed: controller.loadJournals, 
+                  onPressed: controller.loadJournals,
                   child: const Text('REFRESH'),
                 ),
               ],
@@ -214,7 +324,9 @@ class JournalView extends StatelessWidget {
 
                 if (controller.entries.isEmpty) {
                   return const Center(
-                    child: Text('Belum ada jurnal. Mulai tulis jurnal pertamamu!'),
+                    child: Text(
+                      'Belum ada jurnal. Mulai tulis jurnal pertamamu!',
+                    ),
                   );
                 }
 
@@ -257,14 +369,27 @@ class JournalView extends StatelessWidget {
                                 Row(
                                   children: [
                                     IconButton(
-                                      icon: const Icon(Icons.edit_outlined, size: 20, color: AppTheme.primaryBlue),
-                                      onPressed: () => controller.selectForEdit(entry),
+                                      icon: const Icon(
+                                        Icons.edit_outlined,
+                                        size: 20,
+                                        color: AppTheme.primaryBlue,
+                                      ),
+                                      onPressed: () =>
+                                          controller.selectForEdit(entry),
                                       constraints: const BoxConstraints(),
                                       padding: const EdgeInsets.all(4),
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
-                                      onPressed: () => controller.deleteJournal(entry['id']),
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        size: 20,
+                                        color: Colors.redAccent,
+                                      ),
+                                      onPressed: () =>
+                                          controller.confirmAndDelete(
+                                            entry['id'],
+                                            title: entry['title'],
+                                          ),
                                       constraints: const BoxConstraints(),
                                       padding: const EdgeInsets.all(4),
                                     ),
@@ -274,8 +399,8 @@ class JournalView extends StatelessWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              entry['created_at'] != null 
-                                  ? entry['created_at'].toString().split(' ')[0] 
+                              entry['created_at'] != null
+                                  ? entry['created_at'].toString().split(' ')[0]
                                   : '',
                               style: const TextStyle(
                                 fontSize: 12,
