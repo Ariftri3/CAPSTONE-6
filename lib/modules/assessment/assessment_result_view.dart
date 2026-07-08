@@ -15,10 +15,10 @@ class AssessmentResultView extends StatelessWidget {
 
     final percent = (score.clamp(0, 100) / 100).toDouble();
     final status = score >= 75
-        ? 'Tinggi'
-        : score >= 50
-        ? 'Sedang'
-        : 'Rendah';
+      ? 'Mood Positif'
+      : score >= 50
+        ? 'Mood Stabil'
+        : 'Perlu Perhatian';
     final statusColor = score >= 75
         ? const Color(0xFFEC6A37)
         : score >= 50
@@ -42,9 +42,10 @@ class AssessmentResultView extends StatelessWidget {
         elevation: 0,
       ),
       backgroundColor: AppTheme.primaryLight,
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
@@ -63,7 +64,7 @@ class AssessmentResultView extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    'Tingkat Stres Kamu',
+                    'Hasil Mood Hari Ini',
                     style: Theme.of(
                       context,
                     ).textTheme.headlineMedium?.copyWith(fontSize: 20),
@@ -121,7 +122,7 @@ class AssessmentResultView extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Hasil tes menunjukkan bahwa kamu sedang berada di fase tekanan yang cukup stabil, namun ada beberapa hal yang perlu diwaspadai agar tidak meningkatkan level stres dan belajar merasa sedikit lebih tenang lagi.',
+                    'Hasil assessment menunjukkan kondisi mood Anda hari ini. Terus pantau perkembangan mood setiap hari dan manfaatkan fitur jurnal untuk mencatat pengalaman atau perasaan yang Anda alami.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
@@ -136,15 +137,15 @@ class AssessmentResultView extends StatelessWidget {
               ).textTheme.headlineMedium?.copyWith(fontSize: 18),
             ),
             const SizedBox(height: 12),
-            Expanded(
-              child: ListView(
-                children: [
-                  _suggestionTile('Istirahat yang cukup'),
-                  _suggestionTile('Olahraga ringan'),
-                  _suggestionTile('Kelola stres'),
-                  _suggestionTile('Curhat'),
-                ],
-              ),
+            ListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _suggestionTile('Istirahat yang cukup'),
+                _suggestionTile('Olahraga ringan'),
+                _suggestionTile('Kelola stres'),
+                _suggestionTile('Curhat'),
+              ],
             ),
             Container(
               margin: const EdgeInsets.only(bottom: 18),
@@ -195,6 +196,7 @@ class AssessmentResultView extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

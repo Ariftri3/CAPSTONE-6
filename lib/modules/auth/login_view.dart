@@ -231,7 +231,11 @@ class _LoginViewState extends State<LoginView> {
                           ),
                         ),
                         onPressed: _isLoading ? null : _loginWithGoogle,
-                        icon: const Icon(Icons.login, color: Colors.black87),
+                        icon: Image.asset(
+                          'lib/assets/images/google_logo.png',
+                          width: 20,
+                          height: 20,
+                        ),
                         label: const Text(
                           'Login dengan Google',
                           style: TextStyle(

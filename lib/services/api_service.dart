@@ -33,6 +33,12 @@ class ApiService {
   // ── Header dengan Supabase access token ──────────────────────
   static Map<String, String> get _authHeaders {
     final token = SupabaseService.accessToken;
+
+    print("================================");
+    print("ACCESS TOKEN:");
+    print(token);
+    print("================================");
+
     return {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',

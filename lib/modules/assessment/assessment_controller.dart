@@ -8,16 +8,16 @@ const _opts = ['Tidak Pernah', 'Jarang', 'Kadang-kadang', 'Sering', 'Selalu'];
 
 // Data soal assessment
 final _questions = [
-  AssessmentQuestion(question: 'Seberapa sering kamu merasa cemas tanpa alasan yang jelas?',     options: _opts),
-  AssessmentQuestion(question: 'Apakah kamu kesulitan untuk tidur atau istirahat dengan nyenyak?', options: _opts),
-  AssessmentQuestion(question: 'Seberapa sering kamu merasa sedih atau kehilangan semangat?',      options: _opts),
-  AssessmentQuestion(question: 'Apakah kamu merasa sulit berkonsentrasi pada pekerjaan/belajar?', options: _opts),
-  AssessmentQuestion(question: 'Seberapa sering kamu merasa kelelahan meskipun sudah beristirahat?', options: _opts),
-  AssessmentQuestion(question: 'Apakah kamu merasa kurang percaya diri akhir-akhir ini?',         options: _opts),
-  AssessmentQuestion(question: 'Seberapa sering kamu merasa tidak bersemangat menjalani aktivitas?', options: _opts),
-  AssessmentQuestion(question: 'Apakah kamu mengalami perubahan nafsu makan yang signifikan?',    options: _opts),
-  AssessmentQuestion(question: 'Seberapa sering kamu merasa tertekan oleh tuntutan hidup?',       options: _opts),
-  AssessmentQuestion(question: 'Apakah kamu merasa memiliki dukungan sosial yang cukup?',         options: _opts),
+  AssessmentQuestion(question: 'Hari ini saya merasa sulit merasa tenang ketika menghadapi aktivitas sehari-hari.',  options: _opts,),
+  AssessmentQuestion(question: 'Hari ini saya merasa cemas atau khawatir tanpa alasan yang jelas.',  options: _opts,),
+  AssessmentQuestion(question: 'Hari ini saya merasa sedih atau murung sehingga memengaruhi suasana hati saya.',  options: _opts,),
+  AssessmentQuestion(question: 'Hari ini saya merasa sulit berkonsentrasi saat belajar, bekerja, atau melakukan aktivitas lainnya.',  options: _opts,),
+  AssessmentQuestion(question: 'Hari ini saya merasa mudah lelah meskipun aktivitas yang saya lakukan tidak terlalu berat.',  options: _opts,),
+  AssessmentQuestion(question: 'Hari ini saya merasa mudah tersinggung atau marah terhadap hal-hal kecil.',  options: _opts,),
+  AssessmentQuestion(question: 'Hari ini saya merasa terbebani oleh masalah yang sedang saya hadapi.',  options: _opts,),
+  AssessmentQuestion(question: 'Hari ini saya merasa kesulitan menikmati aktivitas yang biasanya saya sukai.',  options: _opts,),
+  AssessmentQuestion(question: 'Hari ini saya merasa memiliki dukungan dari keluarga atau orang terdekat ketika menghadapi masalah.',  options: _opts,),
+  AssessmentQuestion(question: 'Secara keseluruhan, hari ini saya merasa kondisi emosional saya berada dalam keadaan yang baik.',  options: _opts,),
 ];
 
 class AssessmentController extends GetxController {
