@@ -50,7 +50,7 @@ class EmotionDetectionView extends GetView<EmotionDetectionController> {
         ],
       ),
       backgroundColor: AppTheme.primaryLight,
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -192,7 +192,8 @@ class EmotionDetectionView extends GetView<EmotionDetectionController> {
     Color color = AppTheme.primaryBlue,
   }) =>
       Container(
-        height: 280,
+        constraints: const BoxConstraints(minHeight: 280),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -203,8 +204,11 @@ class EmotionDetectionView extends GetView<EmotionDetectionController> {
           children: [
             Icon(icon, size: 64, color: color),
             const SizedBox(height: 12),
-            Text(text,
-                style: TextStyle(color: color, fontWeight: FontWeight.w500)),
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: color, fontWeight: FontWeight.w500),
+            ),
           ],
         ),
       );

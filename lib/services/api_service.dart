@@ -249,4 +249,14 @@ class ApiService {
     );
     return jsonDecode(response.body);
   }
+
+  /// POST /emotion/predict — prediksi emosi dari gambar base64 menggunakan DeepFace
+  static Future<Map<String, dynamic>> predictEmotion(String base64Image) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/emotion/predict'),
+      headers: _authHeaders,
+      body: jsonEncode({'image_base64': base64Image}),
+    );
+    return jsonDecode(response.body);
+  }
 }

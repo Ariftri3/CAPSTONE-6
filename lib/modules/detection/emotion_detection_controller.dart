@@ -1,19 +1,19 @@
-import 'dart:typed_data';
+import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 import 'package:camera/camera.dart';
 import 'package:get/get.dart';
-import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import '../../services/api_service.dart';
 
-/// EmotionDetectionController — deteksi emosi wajah secara real-time
-/// menggunakan kamera depan + Google ML Kit Face Detection.
+/// EmotionDetectionController — deteksi emosi wajah menggunakan AI Backend (DeepFace)
 ///
 /// Cara kerja:
 ///   1. Buka kamera depan
-///   2. Setiap frame dianalisis: deteksi landmark wajah (senyum, mata terbuka)
-///   3. Dari nilai tersebut, klasifikasikan ke label emosi
-///   4. Tampilkan hasil live di layar
-///   5. Tombol "Simpan" → kirim ke Flask API (/emotion)
+///   2. Setiap 3 detik, ambil foto (takePicture)
+///   3. Konversi foto ke base64
+///   4. Kirim ke API Flask (/emotion/predict) yang menggunakan DeepFace + MediaPipe
+///   5. Tampilkan hasil prediksi di layar
+///   6. Tombol "Simpan" → kirim ke Flask API (/emotion) untuk masuk ke database
 class EmotionDetectionController extends GetxController {
   // ── State yang diobservasi oleh View ──────────────────────
   final detectedEmotion = 'Mendeteksi...'.obs;
@@ -25,26 +25,19 @@ class EmotionDetectionController extends GetxController {
 
   // ── Internal ──────────────────────────────────────────────
   CameraController? cameraController;
-  late FaceDetector _faceDetector;
+  Timer? _timer;
   bool _isProcessingFrame = false;
 
   @override
   void onInit() {
     super.onInit();
-    _faceDetector = FaceDetector(
-      options: FaceDetectorOptions(
-        enableClassification: true,  // aktifkan senyum & mata terbuka
-        enableLandmarks: true,
-        performanceMode: FaceDetectorMode.fast,
-      ),
-    );
     _initCamera();
   }
 
   @override
   void onClose() {
+    _timer?.cancel();
     cameraController?.dispose();
-    _faceDetector.close();
     super.onClose();
   }
 
@@ -61,108 +54,62 @@ class EmotionDetectionController extends GetxController {
         frontCamera,
         ResolutionPreset.medium,
         enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.nv21, // Android
       );
 
       await cameraController!.initialize();
       cameraReady.value = true;
 
-      // Mulai stream frame untuk deteksi real-time
-      cameraController!.startImageStream(_processFrame);
+      // Mulai mengambil foto setiap 3 detik untuk dikirim ke Backend
+      _startDetectionTimer();
     } catch (e) {
       errorMessage.value = 'Gagal membuka kamera: $e';
     }
   }
 
-  // ── Proses setiap frame dari kamera ──────────────────────
-  Future<void> _processFrame(CameraImage image) async {
-    if (_isProcessingFrame) return;
+  void _startDetectionTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _processImage();
+    });
+  }
+
+  // ── Ambil gambar dan kirim ke API Flask (DeepFace) ────────
+  Future<void> _processImage() async {
+    if (_isProcessingFrame || !cameraReady.value || cameraController == null) {
+      return;
+    }
+    
+    if (!cameraController!.value.isInitialized || cameraController!.value.isTakingPicture) {
+      return;
+    }
+
     _isProcessingFrame = true;
 
     try {
-      final inputImage = _toInputImage(image);
-      if (inputImage == null) return;
+      // Ambil foto dari kamera
+      final XFile image = await cameraController!.takePicture();
+      
+      // Ubah ke format Base64
+      final bytes = await image.readAsBytes();
+      final base64String = base64Encode(bytes);
 
-      final faces = await _faceDetector.processImage(inputImage);
+      // Kirim ke API Flask (/emotion/predict)
+      final result = await ApiService.predictEmotion(base64String);
 
-      if (faces.isEmpty) {
+      if (result['success'] == true) {
+        detectedEmotion.value = result['emotion'] as String;
+        // Backend mengembalikan confidence sebagai int/double (misal: 98.5)
+        confidence.value = (result['confidence'] as num).toDouble();
+      } else {
         detectedEmotion.value = 'Wajah tidak terdeteksi';
-        confidence.value = 0;
-        return;
+        confidence.value = 0.0;
       }
-
-      // Ambil wajah pertama yang terdeteksi
-      final face = faces.first;
-      final result = _classifyEmotion(face);
-      detectedEmotion.value = result['label'] as String;
-      confidence.value = result['confidence'] as double;
-    } catch (_) {
-      // abaikan error per-frame supaya stream tetap jalan
+    } catch (e) {
+      // Jika error (misal: wajah tidak ada atau jaringan lambat), kembalikan ke state awal
+      detectedEmotion.value = 'Mendeteksi...';
+      confidence.value = 0.0;
     } finally {
       _isProcessingFrame = false;
     }
-  }
-
-  // ── Klasifikasi emosi dari landmark wajah ─────────────────
-  /// ML Kit memberikan nilai probabilitas senyum (0-1) dan mata terbuka (0-1).
-  /// Kita gunakan kombinasi nilai itu untuk menentukan emosi.
-  Map<String, dynamic> _classifyEmotion(Face face) {
-    final smileProb = face.smilingProbability ?? 0.0;
-    final leftEyeOpen = face.leftEyeOpenProbability ?? 1.0;
-    final rightEyeOpen = face.rightEyeOpenProbability ?? 1.0;
-    final eyeOpen = (leftEyeOpen + rightEyeOpen) / 2;
-
-    String label;
-    double conf;
-
-    if (smileProb > 0.75) {
-      label = 'Bahagia';
-      conf = smileProb * 100;
-    } else if (smileProb > 0.45) {
-      label = 'Tenang';
-      conf = (smileProb + 0.2).clamp(0.0, 1.0) * 100;
-    } else if (eyeOpen < 0.3) {
-      label = 'Lelah';
-      conf = (1 - eyeOpen) * 100;
-    } else if (smileProb < 0.15 && eyeOpen > 0.7) {
-      label = 'Sedih';
-      conf = (1 - smileProb) * 80;
-    } else if (smileProb < 0.25) {
-      label = 'Netral';
-      conf = 70.0;
-    } else {
-      label = 'Cemas';
-      conf = 65.0;
-    }
-
-    return {'label': label, 'confidence': double.parse(conf.toStringAsFixed(1))};
-  }
-
-  // ── Konversi CameraImage → InputImage untuk ML Kit ────────
-  InputImage? _toInputImage(CameraImage image) {
-    final camera = cameraController?.description;
-    if (camera == null) return null;
-
-    final rotation = InputImageRotationValue.fromRawValue(
-          camera.sensorOrientation,
-        ) ??
-        InputImageRotation.rotation0deg;
-
-    final format = InputImageFormatValue.fromRawValue(image.format.raw);
-    if (format == null) return null;
-
-    final plane = image.planes.first;
-    return InputImage.fromBytes(
-      bytes: Uint8List.fromList(
-        image.planes.expand((p) => p.bytes).toList(),
-      ),
-      metadata: InputImageMetadata(
-        size: Size(image.width.toDouble(), image.height.toDouble()),
-        rotation: rotation,
-        format: format,
-        bytesPerRow: plane.bytesPerRow,
-      ),
-    );
   }
 
   // ── Simpan hasil ke backend ───────────────────────────────
@@ -184,7 +131,7 @@ class EmotionDetectionController extends GetxController {
         'Tersimpan',
         'Emosi "${detectedEmotion.value}" berhasil dicatat',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Color(0xFFE8F5E9),
+        backgroundColor: const Color(0xFFE8F5E9),
       );
     } catch (e) {
       Get.snackbar('Error', 'Gagal menyimpan: $e',
