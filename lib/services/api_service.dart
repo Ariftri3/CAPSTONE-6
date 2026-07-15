@@ -1,10 +1,6 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'supabase_service.dart';
-// dart:io hanya dipakai untuk cek Platform.isAndroid; aman di-import
-// karena selalu dijaga oleh pengecekan `kIsWeb` terlebih dahulu.
-import 'dart:io' show Platform;
 
 /// ApiService — komunikasi dengan backend Flask.
 /// Perubahan dari versi lama:
@@ -14,21 +10,13 @@ import 'dart:io' show Platform;
 ///   * Ditambah saveEmotion() dan getEmotions() untuk fitur deteksi emosi
 ///   * baseUrl sekarang otomatis menyesuaikan platform (web/emulator/device)
 class ApiService {
-  // ⚠️  Untuk HP FISIK (Android/iOS asli, bukan emulator/web), ganti baris
-  // di bawah dengan IP komputer kamu di jaringan yang sama, contoh:
-  // return "http://192.168.1.9:5000";
-  static String get baseUrl {
-    if (kIsWeb) {
-      // Flutter Web (mis. dijalankan via `flutter run -d chrome`)
-      return "http://localhost:5000";
-    }
-    if (Platform.isAndroid) {
-      // Android Emulator → 10.0.2.2 adalah alias ke localhost komputer host
-      return "http://10.0.2.2:5000";
-    }
-    // iOS Simulator, desktop (Windows/macOS/Linux), dll → localhost biasa
-    return "http://localhost:5000";
-  }
+  // ⚠️  Isi dengan URL ngrok yang aktif sekarang, contoh:
+  // "https://a1b2-34-56-78-90.ngrok-free.app"
+  // Setiap kali ngrok di-restart (tier gratis), URL-nya berubah — jadi
+  // update lagi nilai ini setiap kali itu terjadi.
+  static const String _ngrokUrl = "https://xxxx-xx-xx-xx-xx.ngrok-free.app";
+
+  static String get baseUrl => _ngrokUrl;
 
   // ── Header dengan Supabase access token ──────────────────────
   static Map<String, String> get _authHeaders {
@@ -246,16 +234,6 @@ class ApiService {
     final response = await http.get(
       Uri.parse('$baseUrl/emotion?limit=$limit'),
       headers: _authHeaders,
-    );
-    return jsonDecode(response.body);
-  }
-
-  /// POST /emotion/predict — prediksi emosi dari gambar base64 menggunakan DeepFace
-  static Future<Map<String, dynamic>> predictEmotion(String base64Image) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/emotion/predict'),
-      headers: _authHeaders,
-      body: jsonEncode({'image_base64': base64Image}),
     );
     return jsonDecode(response.body);
   }

@@ -13,6 +13,11 @@ class AuthController extends GetxController {
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       final event = data.event;
       if (event == AuthChangeEvent.signedIn) {
+        // Cegah auto-redirect ke dashboard jika sedang dalam proses register / OTP
+        if (Get.currentRoute == AppRoutes.register || Get.currentRoute == AppRoutes.otp) {
+          return;
+        }
+
         // Cek route saat ini agar tidak double navigate jika sudah di dashboard
         if (Get.currentRoute != AppRoutes.dashboard) {
           Get.offAllNamed(AppRoutes.dashboard);

@@ -62,6 +62,12 @@ class EmotionDetectionView extends GetView<EmotionDetectionController> {
                   icon: Icons.error_outline,
                   text: controller.errorMessage.value,
                   color: Colors.red,
+                  actionLabel: controller.permissionPermanentlyDenied.value
+                      ? 'Buka Pengaturan'
+                      : 'Coba Lagi',
+                  onAction: controller.permissionPermanentlyDenied.value
+                      ? controller.openSettings
+                      : controller.retry,
                 );
               }
               if (!controller.cameraReady.value) {
@@ -73,7 +79,7 @@ class EmotionDetectionView extends GetView<EmotionDetectionController> {
               return ClipRRect(
                 borderRadius: BorderRadius.circular(24),
                 child: AspectRatio(
-                  aspectRatio: 3 / 4,
+                  aspectRatio: 4 / 4.2,
                   child: CameraPreview(controller.cameraController!),
                 ),
               );
@@ -190,10 +196,11 @@ class EmotionDetectionView extends GetView<EmotionDetectionController> {
     required IconData icon,
     required String text,
     Color color = AppTheme.primaryBlue,
+    String? actionLabel,
+    VoidCallback? onAction,
   }) =>
       Container(
-        constraints: const BoxConstraints(minHeight: 280),
-        padding: const EdgeInsets.all(24),
+        height: 280,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -204,11 +211,25 @@ class EmotionDetectionView extends GetView<EmotionDetectionController> {
           children: [
             Icon(icon, size: 64, color: color),
             const SizedBox(height: 12),
-            Text(
-              text,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: color, fontWeight: FontWeight.w500),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                text,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: color, fontWeight: FontWeight.w500),
+              ),
             ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              OutlinedButton(
+                onPressed: onAction,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: color,
+                  side: BorderSide(color: color),
+                ),
+                child: Text(actionLabel),
+              ),
+            ],
           ],
         ),
       );
